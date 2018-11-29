@@ -9,8 +9,6 @@
 #include <net/ethernet.h>
 #include <arpa/inet.h>
 
-static void print_ipheader(char *p);
-
 void ethernetPacketHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet);
 
 void pppPacketHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet);
@@ -30,7 +28,6 @@ int main(int argc, char *argv[]) {
         printf("error: open pcap file");
         return 1;
     }
-
 
 //    /* 受信用のデバイスを開く */
 //    if ((handle = pcap_open_live(dev, BUFSIZ, 1, 1000, errbuf)) == NULL) {
@@ -64,15 +61,7 @@ int main(int argc, char *argv[]) {
 //   2    : 受信したPacketの補足情報
 //   3    : 受信したpacketへのポインタ
 void ethernetPacketHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet) {
-    print_ipheader((char *) packet);
-}
-
-void pppPacketHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet) {
-    printf("ppp layer\n");
-}
-
-static void print_ipheader(char *p) {
-    struct ether_header *eth = (struct ether_header *) p;
+    struct ether_header *eth = (struct ether_header *) packet;
     struct ip *ip;
 
     if (ETHERTYPE_IP != ntohs(eth->ether_type)) {
@@ -81,7 +70,7 @@ static void print_ipheader(char *p) {
     }
 
     // Etherフレームデータの次がIPパケットデータなので、ポインタを移動させる。
-    ip = (struct ip *) (p + sizeof(struct ether_header));
+    ip = (struct ip *) (packet + sizeof(struct ether_header));
 
     printf("ip_v = 0x%x\n", ip->ip_v);
     printf("ip_hl = 0x%x\n", ip->ip_hl);
@@ -95,6 +84,10 @@ static void print_ipheader(char *p) {
     printf("ip_src = %s\n", inet_ntoa(ip->ip_src));
     printf("ip_dst = %s\n", inet_ntoa(ip->ip_dst));
     printf("\n");
+}
+
+void pppPacketHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet) {
+    printf("ppp layer\n");
 }
 
 static void usage(char *prog) {
