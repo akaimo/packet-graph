@@ -41,8 +41,9 @@ int main(int argc, char *argv[]) {
     struct bpf_program fp;
     bpf_u_int32 net;
 
-    if ((dev = argv[1]) == NULL)
+    if ((dev = argv[1]) == NULL) {
         usage(argv[0]);
+    };
 
     /* 受信用のデバイスを開く */
     if ((handle = pcap_open_live(dev, BUFSIZ, 1, 1000, errbuf)) == NULL) {
