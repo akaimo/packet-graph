@@ -11,7 +11,9 @@
 
 static void print_ipheader(char *p);
 
-void packetHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet);
+void ethernetPacketHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet);
+
+void pppPacketHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet);
 
 static void usage(char *prog);
 
@@ -41,10 +43,17 @@ int main(int argc, char *argv[]) {
 //        exit(EXIT_FAILURE);
 //    }
 
-    /* ループでパケットを受信 */
-    if (pcap_loop(handle, 0, packetHandler, NULL) < 0) {
-        printf("err\n");
-        return 1;
+    if (pcap_datalink(handle) == DLT_EN10MB) {
+        if (pcap_loop(handle, 0, ethernetPacketHandler, NULL) < 0) {
+            exit(EXIT_FAILURE);
+        }
+    } else if (pcap_datalink(handle) == DLT_PPP) {
+        if (pcap_loop(handle, 0, pppPacketHandler, NULL) < 0) {
+            exit(EXIT_FAILURE);
+        }
+    } else {
+        printf("not support link type\n");
+        exit(EXIT_FAILURE);
     }
 
     pcap_close(handle);
@@ -54,8 +63,12 @@ int main(int argc, char *argv[]) {
 // 第1引数: pcap_loop関数の第4引数
 //   2    : 受信したPacketの補足情報
 //   3    : 受信したpacketへのポインタ
-void packetHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet) {
+void ethernetPacketHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet) {
     print_ipheader((char *) packet);
+}
+
+void pppPacketHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet) {
+    printf("ppp layer\n");
 }
 
 static void print_ipheader(char *p) {
