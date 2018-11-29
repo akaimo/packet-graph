@@ -3,50 +3,71 @@
 //
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <pcap.h>
-#include <netinet/if_ether.h>
+#include <netinet/ip.h>
+#include <net/ethernet.h>
 #include <arpa/inet.h>
-#include <string.h>
 
-#define DPCP_RCV_MAXSIZE   68
-#define DPCP_PROMSCS_MODE  1
-#define DPCP_RCV_TIMEOUT   1000
-#define DPCP_NOLIMIT_LOOP  -1
+static void print_ipheader(char *p) {
+    struct ip *ip;
 
-void start_pktfunc(u_char *, const struct pcap_pkthdr *, const u_char *);
+    ip = (struct ip *) p;
+    printf("ip_v = 0x%x\n", ip->ip_v);
+    printf("ip_hl = 0x%x\n", ip->ip_hl);
+    printf("ip_tos = 0x%.2x\n", ip->ip_tos);
+    printf("ip_len = %d bytes\n", ntohs(ip->ip_len));
+    printf("ip_id = 0x%.4x\n", ntohs(ip->ip_id));
+    printf("ip_off = 0x%.4x\n", ntohs(ip->ip_off));
+    printf("ip_ttl = 0x%.2x\n", ip->ip_ttl);
+    printf("ip_p = 0x%.2x\n", ip->ip_p);
+    printf("ip_sum = 0x%.4x\n", ntohs(ip->ip_sum));
+    printf("ip_src = %s\n", inet_ntoa(ip->ip_src));
+    printf("ip_dst = %s\n", inet_ntoa(ip->ip_dst));
+    printf("\n");
+}
 
-char *convmac_tostr(u_char *, char *, size_t);
+static void usage(char *prog) {
+    fprintf(stderr, "Usage: %s <device>\n", prog);
+    exit(EXIT_FAILURE);
+}
 
-int main() {
-    pcap_t *pd = NULL;
-    char ebuf[PCAP_ERRBUF_SIZE];
+int main(int argc, char *argv[]) {
+    pcap_t *handle;
+    const unsigned char *packet;
+    char *dev;
+    char errbuf[PCAP_ERRBUF_SIZE];
+    struct pcap_pkthdr header;
+    struct bpf_program fp;
+    bpf_u_int32 net;
 
-    if ((pd = pcap_open_live("en0", DPCP_RCV_MAXSIZE, DPCP_PROMSCS_MODE, DPCP_RCV_TIMEOUT, ebuf)) == NULL) {
-        exit(-1);
+    if ((dev = argv[1]) == NULL)
+        usage(argv[0]);
+
+    /* 受信用のデバイスを開く */
+    if ((handle = pcap_open_live(dev, BUFSIZ, 1, 1000, errbuf)) == NULL) {
+        fprintf(stderr, "Couldn't open device %s: %s\n", dev, errbuf);
+        exit(EXIT_FAILURE);
+    }
+    /* イーサネットのみ */
+    if (pcap_datalink(handle) != DLT_EN10MB) {
+        fprintf(stderr, "Device not support: %s\n", dev);
+        exit(EXIT_FAILURE);
     }
 
-    if (pcap_loop(pd, DPCP_NOLIMIT_LOOP, start_pktfunc, NULL) < 0) {
-        exit(-1);
+    /* ループでパケットを受信 */
+    while (1) {
+        if ((packet = pcap_next(handle, &header)) == NULL)
+            continue;
+
+        /* イーサネットヘッダーとIPヘッダーの合計サイズに満たなければ無視 */
+        if (header.len < sizeof(struct ether_header) + sizeof(struct ip))
+            continue;
+        print_ipheader((char *) (packet + sizeof(struct ether_header)));
     }
 
-    pcap_close(pd);
+    /* ここに到達することはない */
+    pcap_close(handle);
     return 0;
 }
 
-void start_pktfunc(u_char *user, const struct pcap_pkthdr *h, const u_char *p) {
-    char dmac[18] = {0};
-    char smac[18] = {0};
-    struct ether_header *eth_hdr = (struct ether_header *) p;
-
-    printf("ether header---------\n");
-    printf("dest mac %s\n", convmac_tostr(eth_hdr->ether_dhost, dmac, sizeof(dmac)));
-    printf("src mac %s\n", convmac_tostr(eth_hdr->ether_shost, smac, sizeof(smac)));
-    printf("ether type %x\n\n", ntohs(eth_hdr->ether_type));
-}
-
-char *convmac_tostr(u_char *hwaddr, char *mac, size_t size) {
-    snprintf(mac, size, "%02x:%02x:%02x:%02x:%02x:%02x",
-             hwaddr[0], hwaddr[1], hwaddr[2],
-             hwaddr[3], hwaddr[4], hwaddr[5]);
-    return mac;
-}
