@@ -38,8 +38,6 @@ int main(int argc, char *argv[]) {
     char *dev;
     char errbuf[PCAP_ERRBUF_SIZE];
     struct pcap_pkthdr header;
-    struct bpf_program fp;
-    bpf_u_int32 net;
 
     if ((dev = argv[1]) == NULL) {
         usage(argv[0]);
