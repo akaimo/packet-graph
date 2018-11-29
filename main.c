@@ -9,28 +9,9 @@
 #include <net/ethernet.h>
 #include <arpa/inet.h>
 
-static void print_ipheader(char *p) {
-    struct ip *ip;
+static void print_ipheader(char *p);
 
-    ip = (struct ip *) p;
-    printf("ip_v = 0x%x\n", ip->ip_v);
-    printf("ip_hl = 0x%x\n", ip->ip_hl);
-    printf("ip_tos = 0x%.2x\n", ip->ip_tos);
-    printf("ip_len = %d bytes\n", ntohs(ip->ip_len));
-    printf("ip_id = 0x%.4x\n", ntohs(ip->ip_id));
-    printf("ip_off = 0x%.4x\n", ntohs(ip->ip_off));
-    printf("ip_ttl = 0x%.2x\n", ip->ip_ttl);
-    printf("ip_p = 0x%.2x\n", ip->ip_p);
-    printf("ip_sum = 0x%.4x\n", ntohs(ip->ip_sum));
-    printf("ip_src = %s\n", inet_ntoa(ip->ip_src));
-    printf("ip_dst = %s\n", inet_ntoa(ip->ip_dst));
-    printf("\n");
-}
-
-static void usage(char *prog) {
-    fprintf(stderr, "Usage: %s <device>\n", prog);
-    exit(EXIT_FAILURE);
-}
+static void usage(char *prog);
 
 int main(int argc, char *argv[]) {
     pcap_t *handle;
@@ -70,3 +51,25 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
+static void print_ipheader(char *p) {
+    struct ip *ip;
+
+    ip = (struct ip *) p;
+    printf("ip_v = 0x%x\n", ip->ip_v);
+    printf("ip_hl = 0x%x\n", ip->ip_hl);
+    printf("ip_tos = 0x%.2x\n", ip->ip_tos);
+    printf("ip_len = %d bytes\n", ntohs(ip->ip_len));
+    printf("ip_id = 0x%.4x\n", ntohs(ip->ip_id));
+    printf("ip_off = 0x%.4x\n", ntohs(ip->ip_off));
+    printf("ip_ttl = 0x%.2x\n", ip->ip_ttl);
+    printf("ip_p = 0x%.2x\n", ip->ip_p);
+    printf("ip_sum = 0x%.4x\n", ntohs(ip->ip_sum));
+    printf("ip_src = %s\n", inet_ntoa(ip->ip_src));
+    printf("ip_dst = %s\n", inet_ntoa(ip->ip_dst));
+    printf("\n");
+}
+
+static void usage(char *prog) {
+    fprintf(stderr, "Usage: %s <device>\n", prog);
+    exit(EXIT_FAILURE);
+}
