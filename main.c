@@ -11,50 +11,65 @@
 
 static void print_ipheader(char *p);
 
+void packetHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet);
+
 static void usage(char *prog);
 
 int main(int argc, char *argv[]) {
-    pcap_t *handle;
-    const unsigned char *packet;
-    char *dev;
-    char errbuf[PCAP_ERRBUF_SIZE];
-    struct pcap_pkthdr header;
+    char *pcap_file;
+    char error_buffer[PCAP_ERRBUF_SIZE];
 
-    if ((dev = argv[1]) == NULL) {
+    if ((pcap_file = argv[1]) == NULL) {
         usage(argv[0]);
     };
 
-    /* 受信用のデバイスを開く */
-    if ((handle = pcap_open_live(dev, BUFSIZ, 1, 1000, errbuf)) == NULL) {
-        fprintf(stderr, "Couldn't open device %s: %s\n", dev, errbuf);
-        exit(EXIT_FAILURE);
+    pcap_t *handle = pcap_open_offline(pcap_file, error_buffer);
+    if (handle == NULL) {
+        printf("error: open pcap file");
+        return 1;
     }
-    /* イーサネットのみ */
-    if (pcap_datalink(handle) != DLT_EN10MB) {
-        fprintf(stderr, "Device not support: %s\n", dev);
-        exit(EXIT_FAILURE);
-    }
+
+
+//    /* 受信用のデバイスを開く */
+//    if ((handle = pcap_open_live(dev, BUFSIZ, 1, 1000, errbuf)) == NULL) {
+//        fprintf(stderr, "Couldn't open device %s: %s\n", dev, errbuf);
+//        exit(EXIT_FAILURE);
+//    }
+//    /* イーサネットのみ */
+//    if (pcap_datalink(handle) != DLT_EN10MB) {
+//        fprintf(stderr, "Device not support: %s\n", dev);
+//        exit(EXIT_FAILURE);
+//    }
 
     /* ループでパケットを受信 */
-    while (1) {
-        if ((packet = pcap_next(handle, &header)) == NULL)
-            continue;
-
-        /* イーサネットヘッダーとIPヘッダーの合計サイズに満たなければ無視 */
-        if (header.len < sizeof(struct ether_header) + sizeof(struct ip))
-            continue;
-        print_ipheader((char *) (packet + sizeof(struct ether_header)));
+    if (pcap_loop(handle, 0, packetHandler, NULL) < 0) {
+        printf("err\n");
+        return 1;
     }
 
-    /* ここに到達することはない */
     pcap_close(handle);
     return 0;
 }
 
+// 第1引数: pcap_loop関数の第4引数
+//   2    : 受信したPacketの補足情報
+//   3    : 受信したpacketへのポインタ
+void packetHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet) {
+    print_ipheader((char *) packet);
+}
+
 static void print_ipheader(char *p) {
+    struct ether_header *eth = (struct ether_header *) p;
     struct ip *ip;
 
-    ip = (struct ip *) p;
+    if (ETHERTYPE_IP != ntohs(eth->ether_type)) {
+        // IPパケットでない場合は無視
+        return;
+    }
+
+    // Etherフレームデータの次がIPパケットデータなので、ポインタを移動させる。
+    ip = (struct ip *) (p + sizeof(struct ether_header));
+
     printf("ip_v = 0x%x\n", ip->ip_v);
     printf("ip_hl = 0x%x\n", ip->ip_hl);
     printf("ip_tos = 0x%.2x\n", ip->ip_tos);
@@ -70,6 +85,6 @@ static void print_ipheader(char *p) {
 }
 
 static void usage(char *prog) {
-    fprintf(stderr, "Usage: %s <device>\n", prog);
+    fprintf(stderr, "Usage: %s <pcap file>\n", prog);
     exit(EXIT_FAILURE);
 }
