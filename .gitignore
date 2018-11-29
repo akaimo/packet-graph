@@ -53,3 +53,5 @@ dkms.conf
 
 bin/*
 !bin/.gitkeep
+
+cmake-build-debug
