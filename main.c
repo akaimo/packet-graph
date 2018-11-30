@@ -13,6 +13,8 @@ void ethernetPacketHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, c
 
 void pppPacketHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet);
 
+void printPacket(const u_char *packet, u_int length);
+
 static void usage(char *prog);
 
 int main(int argc, char *argv[]) {
@@ -88,6 +90,30 @@ void ethernetPacketHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, c
 
 void pppPacketHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet) {
     printf("ppp layer\n");
+    printPacket(packet, pkthdr->len);
+}
+
+void printPacket(const u_char *packet, u_int length) {
+    for (int i = 0; i < length; i++) {
+        if ((i % 16) == 0)
+            printf("%#07x: ", i);    //Print Offset
+
+        printf("%02x ", packet[i]);    //Print Data in Hex Format
+
+        /* Print Data in ASCII Format */
+        if (((i % 16) == 15) || (i == length - 1)) {
+            for (int j = 0; j < 15 - (i % 16); j++)
+                printf("   ");
+            printf(" |");
+            for (int j = (i - (i % 16)); j <= i; j++)
+                if ((packet[j] > 31) && (packet[j] < 127)) {
+                    printf("%c", packet[j]);
+                } else {
+                    printf(".");
+                }
+            printf("|\n");
+        }
+    }
 }
 
 static void usage(char *prog) {
