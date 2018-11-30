@@ -59,6 +59,19 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
+struct ppp {
+    u_int ppp_header;
+    u_char version;
+    u_char diff_serv;
+    u_short length;
+    u_short id;
+    u_short flags;
+    u_char time_to_live;
+    u_char proto;
+    u_short checksum;
+    struct in_addr source_ip, destination_ip;
+};
+
 // 第1引数: pcap_loop関数の第4引数
 //   2    : 受信したPacketの補足情報
 //   3    : 受信したpacketへのポインタ
@@ -90,7 +103,10 @@ void ethernetPacketHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, c
 
 void pppPacketHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet) {
     printf("ppp layer\n");
-    printPacket(packet, pkthdr->len);
+    struct ppp *ppp = (struct ppp *) packet;
+    printf("ip_src = %s\n", inet_ntoa(ppp->source_ip));
+    printf("ip_dst = %s\n", inet_ntoa(ppp->destination_ip));
+    printf("\n");
 }
 
 void printPacket(const u_char *packet, u_int length) {
