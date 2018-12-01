@@ -1,2 +1,2 @@
 build:
-	gcc -Wall main.c -o bin/a.out -I/usr/local/include/graphviz -lpcap -lcgraph -lgvc
+	g++ -Wall main.cpp -o bin/a.out -I/usr/local/include/graphviz -lpcap -lcgraph -lgvc
