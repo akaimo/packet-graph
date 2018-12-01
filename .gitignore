@@ -57,3 +57,4 @@ bin/*
 cmake-build-debug
 
 *.pcap
+sample.png

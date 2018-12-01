@@ -8,6 +8,7 @@
 #include <netinet/ip.h>
 #include <net/ethernet.h>
 #include <arpa/inet.h>
+#include <gvc.h>
 
 void ethernetPacketHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet);
 
@@ -17,6 +18,9 @@ void printPacket(const u_char *packet, u_int length);
 
 static void usage(char *prog);
 
+GVC_t* gvc;
+Agraph_t* g;
+
 int main(int argc, char *argv[]) {
     char *pcap_file;
     char error_buffer[PCAP_ERRBUF_SIZE];
@@ -24,6 +28,13 @@ int main(int argc, char *argv[]) {
     if ((pcap_file = argv[1]) == NULL) {
         usage(argv[0]);
     };
+
+    gvc = gvContext();
+    g = agopen("sample", Agdirected, 0);
+
+    Agnode_t* n = agnode(g, "n", 1);
+    Agnode_t* m = agnode(g, "m", 1);
+    agedge(g, n, m, 0, 1);
 
     pcap_t *handle = pcap_open_offline(pcap_file, error_buffer);
     if (handle == NULL) {
@@ -56,6 +67,11 @@ int main(int argc, char *argv[]) {
     }
 
     pcap_close(handle);
+
+    gvLayout(gvc, g, "dot");
+    gvRenderFilename(gvc, g, "png", "sample.png");
+    gvRender(gvc, g, "dot", stdout);
+
     return 0;
 }
 
