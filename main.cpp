@@ -9,6 +9,9 @@
 #include <net/ethernet.h>
 #include <arpa/inet.h>
 #include <gvc.h>
+#include <string>
+#include <map>
+#include <set>
 
 void ethernetPacketHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet);
 
@@ -18,8 +21,11 @@ void printPacket(const u_char *packet, u_int length);
 
 static void usage(char *prog);
 
+void generateGraph();
+
 GVC_t *gvc;
 Agraph_t *g;
+std::map<std::string, std::set<std::string> > flows;
 
 int main(int argc, char *argv[]) {
     char *pcap_file;
@@ -31,10 +37,6 @@ int main(int argc, char *argv[]) {
 
     gvc = gvContext();
     g = agopen("sample", Agdirected, 0);
-
-    Agnode_t *n = agnode(g, "n", 1);
-    Agnode_t *m = agnode(g, "m", 1);
-    agedge(g, n, m, 0, 1);
 
     pcap_t *handle = pcap_open_offline(pcap_file, error_buffer);
     if (handle == NULL) {
@@ -67,6 +69,8 @@ int main(int argc, char *argv[]) {
     }
 
     pcap_close(handle);
+
+    generateGraph();
 
     gvLayout(gvc, g, "dot");
     gvRenderFilename(gvc, g, "png", "sample.png");
@@ -106,6 +110,11 @@ void ethernetPacketHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, c
     printf("ip_src = %s\n", inet_ntoa(ip->ip_src));
     printf("ip_dst = %s\n", inet_ntoa(ip->ip_dst));
     printf("\n");
+
+    std::string src_ip = inet_ntoa(ip->ip_src);
+    std::string dst_ip = inet_ntoa(ip->ip_dst);
+
+    flows[src_ip].insert(dst_ip);
 }
 
 void pppPacketHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet) {
@@ -114,6 +123,11 @@ void pppPacketHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const 
     printf("ip_src = %s\n", inet_ntoa(ip->ip_src));
     printf("ip_dst = %s\n", inet_ntoa(ip->ip_dst));
     printf("\n");
+
+    std::string src_ip = inet_ntoa(ip->ip_src);
+    std::string dst_ip = inet_ntoa(ip->ip_dst);
+
+    flows[src_ip].insert(dst_ip);
 }
 
 void printPacket(const u_char *packet, u_int length) {
@@ -142,4 +156,14 @@ void printPacket(const u_char *packet, u_int length) {
 static void usage(char *prog) {
     fprintf(stderr, "Usage: %s <pcap file>\n", prog);
     exit(EXIT_FAILURE);
+}
+
+void generateGraph() {
+    for (std::pair<std::string, std::set<std::string> > p:flows) {
+        Agnode_t *src = ::agnode(g, (char *)p.first.c_str(), 1);
+        for(auto x : p.second) {
+            Agnode_t *dst = ::agnode(g, (char *)x.c_str(), 1);
+            ::agedge(g, src, dst, 0, 1);
+        }
+    }
 }
