@@ -35,9 +35,6 @@ int main(int argc, char *argv[]) {
         usage(argv[0]);
     };
 
-    gvc = gvContext();
-    g = agopen("sample", Agdirected, 0);
-
     pcap_t *handle = pcap_open_offline(pcap_file, error_buffer);
     if (handle == nullptr) {
         printf("error: open pcap file");
@@ -155,6 +152,9 @@ static void usage(char *prog) {
 }
 
 void generateGraph() {
+    gvc = gvContext();
+    g = agopen("sample", Agdirected, 0);
+
     for (std::pair<std::string, std::set<std::string> > flow:flows) {
         Agnode_t *src = ::agnode(g, (char *)flow.first.c_str(), 1);
         for(auto d : flow.second) {
