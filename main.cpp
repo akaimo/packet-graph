@@ -72,10 +72,6 @@ int main(int argc, char *argv[]) {
 
     generateGraph();
 
-    gvLayout(gvc, g, "dot");
-    gvRenderFilename(gvc, g, "png", "sample.png");
-    gvRender(gvc, g, "dot", stdout);
-
     return 0;
 }
 
@@ -166,4 +162,8 @@ void generateGraph() {
             ::agedge(g, src, dst, 0, 1);
         }
     }
+
+    gvLayout(gvc, g, "dot");
+    gvRenderFilename(gvc, g, "png", "sample.png");
+    gvRender(gvc, g, "dot", stdout);
 }
