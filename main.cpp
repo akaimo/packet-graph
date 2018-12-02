@@ -155,10 +155,10 @@ static void usage(char *prog) {
 }
 
 void generateGraph() {
-    for (std::pair<std::string, std::set<std::string> > p:flows) {
-        Agnode_t *src = ::agnode(g, (char *)p.first.c_str(), 1);
-        for(auto x : p.second) {
-            Agnode_t *dst = ::agnode(g, (char *)x.c_str(), 1);
+    for (std::pair<std::string, std::set<std::string> > flow:flows) {
+        Agnode_t *src = ::agnode(g, (char *)flow.first.c_str(), 1);
+        for(auto d : flow.second) {
+            Agnode_t *dst = ::agnode(g, (char *)d.c_str(), 1);
             ::agedge(g, src, dst, 0, 1);
         }
     }
