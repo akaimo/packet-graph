@@ -18,8 +18,8 @@ void printPacket(const u_char *packet, u_int length);
 
 static void usage(char *prog);
 
-GVC_t* gvc;
-Agraph_t* g;
+GVC_t *gvc;
+Agraph_t *g;
 
 int main(int argc, char *argv[]) {
     char *pcap_file;
@@ -32,8 +32,8 @@ int main(int argc, char *argv[]) {
     gvc = gvContext();
     g = agopen("sample", Agdirected, 0);
 
-    Agnode_t* n = agnode(g, "n", 1);
-    Agnode_t* m = agnode(g, "m", 1);
+    Agnode_t *n = agnode(g, "n", 1);
+    Agnode_t *m = agnode(g, "m", 1);
     agedge(g, n, m, 0, 1);
 
     pcap_t *handle = pcap_open_offline(pcap_file, error_buffer);
