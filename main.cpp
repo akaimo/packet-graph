@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
     char *pcap_file;
     char error_buffer[PCAP_ERRBUF_SIZE];
 
-    if ((pcap_file = argv[1]) == NULL) {
+    if ((pcap_file = argv[1]) == nullptr) {
         usage(argv[0]);
     };
 
@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
     g = agopen("sample", Agdirected, 0);
 
     pcap_t *handle = pcap_open_offline(pcap_file, error_buffer);
-    if (handle == NULL) {
+    if (handle == nullptr) {
         printf("error: open pcap file");
         return 1;
     }
@@ -56,11 +56,11 @@ int main(int argc, char *argv[]) {
 //    }
 
     if (pcap_datalink(handle) == DLT_EN10MB) {
-        if (pcap_loop(handle, 0, ethernetPacketHandler, NULL) < 0) {
+        if (pcap_loop(handle, 0, ethernetPacketHandler, nullptr) < 0) {
             exit(EXIT_FAILURE);
         }
     } else if (pcap_datalink(handle) == DLT_PPP) {
-        if (pcap_loop(handle, 0, pppPacketHandler, NULL) < 0) {
+        if (pcap_loop(handle, 0, pppPacketHandler, nullptr) < 0) {
             exit(EXIT_FAILURE);
         }
     } else {
