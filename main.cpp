@@ -73,7 +73,9 @@ int main(int argc, char *argv[]) {
 }
 
 struct ppp_header {
-    u_int ppp_header;
+    u_char address;
+    u_char control;
+    u_short protocol;
 };
 
 // 第1引数: pcap_loop関数の第4引数
@@ -84,7 +86,7 @@ void ethernetPacketHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, c
     struct ip *ip;
 
     if (ETHERTYPE_IP != ntohs(eth->ether_type)) {
-        // IPパケットでない場合は無視
+        // IPv4パケットでない場合は無視
         return;
     }
 
@@ -111,7 +113,12 @@ void ethernetPacketHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, c
 }
 
 void pppPacketHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet) {
-    printf("ppp layer\n");
+    struct ppp_header *ppp = (struct ppp_header *) packet;
+    if (0x0021 != ntohs(ppp->protocol)) {
+        // IPv4パケットでない場合は無視
+        return;
+    }
+
     struct ip *ip = (struct ip *) (packet + sizeof(struct ppp_header));
     printf("ip_src = %s\n", inet_ntoa(ip->ip_src));
     printf("ip_dst = %s\n", inet_ntoa(ip->ip_dst));
