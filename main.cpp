@@ -23,8 +23,6 @@ static void usage(char *prog);
 
 void generateGraph();
 
-GVC_t *gvc;
-Agraph_t *g;
 std::map<std::string, std::set<std::string> > flows;
 
 int main(int argc, char *argv[]) {
@@ -159,8 +157,8 @@ static void usage(char *prog) {
 }
 
 void generateGraph() {
-    gvc = gvContext();
-    g = agopen("sample", Agdirected, 0);
+    GVC_t *gvc = gvContext();
+    Agraph_t *g = agopen("sample", Agdirected, 0);
 
     for (std::pair<std::string, std::set<std::string> > flow:flows) {
         Agnode_t *src = ::agnode(g, (char *)flow.first.c_str(), 1);
